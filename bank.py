@@ -36,6 +36,11 @@ class Record:
         # Не учитываем микросекунды для корректного отображения границ
         self.date = datetime.now().replace(microsecond=0)
 
+    def get_prev_balance(self):
+        if self.operation == 'withdraw':
+            return self.balance + self.amount
+        return self.balance - self.amount
+
 
 class Database:
     '''
@@ -77,7 +82,7 @@ class Database:
         period_recs = [rec for rec in account if since <= rec.date <= till]
         balance_start, balance_end = 0, 0
         if period_recs:
-            balance_start = self._get_prev_balance(period_recs[0])
+            balance_start = period_recs[0].get_prev_balance()
             balance_end = period_recs[-1].balance
         table = self._generate_table(period_recs, balance_start, balance_end)
         self._print_table(table)
@@ -99,8 +104,8 @@ class Database:
                 t_line[2] = f'${rec.amount}'
                 total_windr += rec.amount
             table.append(t_line)
-        table.append(['', 'Totals', f'${total_dep}',
-                      f'${total_windr}', f'${balance_end}'])
+        table.append(['', 'Totals', f'${total_windr}',
+                      f'${total_dep}', f'${balance_end}'])
         return table
 
     def _print_table(self, table):
@@ -113,12 +118,6 @@ class Database:
             if not line[0] and not line[1] == "Totals":
                 print(self.LINE)
         print()
-
-    @staticmethod
-    def _get_prev_balance(record):
-        if record.operation == 'withdraw':
-            return record.balance + record.amount
-        return record.balance - record.amount
 
 
 class BankShell(cmd.Cmd):
