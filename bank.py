@@ -8,24 +8,19 @@ from shlex import split
 
 
 def to_decimal(value):
-    # Откинем разряды после центов и не будем их учитывать
+    # Откинем разряды после центов и не будем их учитывать.
     return Decimal(f'{float(value):.2f}')
 
 
 class ArgumentParserNoExit(argparse.ArgumentParser):
-    '''
-    Парсер аргументов
-    '''
-
+    '''Парсер аргументов.'''
     def error(self, message):
         raise Exception(message)
 
 
 @dataclass
 class Record:
-    '''
-    Запись на счете
-    '''
+    '''Запись на счете.'''
     amount: float
     operation: str
     description: str
@@ -43,13 +38,15 @@ class Record:
 
 
 class Database:
-    '''
-    Данные
-    '''
-    TABLE_HEADERS = ['Date', 'Description', 'Withdrawals',
-                     'Deposits', 'Balance']
+    '''Данные.'''
+    # Состав заголовка банковской выписки.
+    TABLE_HEADERS = ('Date', 'Description', 'Withdrawals',
+                     'Deposits', 'Balance')
+    # Формат заголовка банковской выписки.
     HEADRER = '|{:<19}|{:<19}|{:<16}|{:<16}|{:<16}|'.format(*TABLE_HEADERS)
+    # Пустая линия таблицы банковской выписки.
     LINE = '|{:-<19}|{:-<19}|{:-<16}|{:-<16}|{:-<16}|'.format(*(['-']*5))
+    # Формат строки таблицы банковской выписки.
     LINE_FORMAT = '|{:<19}|{:<19}|{:>16}|{:>16}|{:>16}|'
 
     def __init__(self):
@@ -121,9 +118,7 @@ class Database:
 
 
 class BankShell(cmd.Cmd):
-    '''
-    Интерфейс командной строки
-    '''
+    '''Интерфейс командной строки.'''
     intro = 'Service started.\nEnter "exit" for quit.'
     prompt = ''
     METHODS = {
@@ -153,21 +148,46 @@ class BankShell(cmd.Cmd):
         pass
 
     def do_deposit(self, args):
+        '''Положить деньги на счет.
+        deposite --client [str] --amount [decimal] --description [str]
+
+        Параметры:
+        client -- имя клиента
+        amount -- сумма операции
+        description -- описание операции
+        '''
         args = self._parse(args, 'deposite')
         if args:
             self._database.deposite(**args)
 
     def do_withdraw(self, args):
+        '''Снять деньги со счета.
+        withdraw --client [str] --amount [decimal] --description [str]
+
+        Параметры:
+        client -- имя клиента
+        amount -- сумма операции
+        description -- описание операции
+        '''
         args = self._parse(args, 'withdraw')
         if args:
             self._database.withdraw(**args)
 
     def do_show_bank_statement(self, args):
+        '''Показать банковскую выписку по клиенту за период.
+        show_bank_statement --client [str] --since [datetime] --till [datetime]
+
+        Параметры:
+        client -- имя клиента
+        since -- начало периода
+        till -- конец периода
+        '''
         args = self._parse(args, 'show_bank_statement')
         if args:
             self._database.show_bank_statement(**args)
 
     def do_exit(self, args):
+        '''Выйти из программы.'''
         return True
 
     def _parse(self, args, parser_name):
